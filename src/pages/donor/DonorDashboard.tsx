@@ -1,4 +1,4 @@
-import { Home, PlusCircle, Clock, MessageCircle, User } from "lucide-react";
+import { Home, PlusCircle, Clock, MessageCircle, User, Bell } from "lucide-react";
 import BottomNav from "@/components/BottomNav";
 import logo from "@/assets/rizq-logo.png";
 import biryani from "@/assets/food-biryani.jpg";
@@ -15,9 +15,9 @@ const donorNav = [
 ];
 
 const recentDonations = [
-  { id: 1, title: "Biryani for 25", location: "Green Park, New Delhi", time: "2 hours ago", img: biryani, status: "Picked Up" },
-  { id: 2, title: "Fresh Cake - 5 slices", location: "Malviya Nagar", time: "5 hours ago", img: cake, status: "Delivered" },
-  { id: 3, title: "Dal Chawal for 15", location: "Saket Metro Station", time: "1 day ago", img: dal, status: "Delivered" },
+  { id: 1, title: "Biryani for 25", location: "Gulberg, Lahore", time: "2 hours ago", img: biryani, status: "Picked Up" },
+  { id: 2, title: "Fresh Cake - 5 slices", location: "DHA Phase 5", time: "5 hours ago", img: cake, status: "Delivered" },
+  { id: 3, title: "Dal Chawal for 15", location: "Model Town, Lahore", time: "1 day ago", img: dal, status: "Delivered" },
 ];
 
 const DonorDashboard = () => {
@@ -25,22 +25,26 @@ const DonorDashboard = () => {
 
   return (
     <div className="mobile-container min-h-screen bg-background pb-20">
-      {/* Header */}
       <div className="gradient-primary px-5 pt-6 pb-10 rounded-b-3xl">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             <img src={logo} alt="Logo" className="w-9 h-9" />
             <div>
-              <h1 className="text-lg font-bold text-primary-foreground">Rizq-Connect</h1>
+              <h1 className="text-lg font-bold text-primary-foreground">SafeBite</h1>
               <p className="text-xs text-primary-foreground/70">Donor Dashboard</p>
             </div>
           </div>
-          <div className="w-9 h-9 rounded-full bg-primary-foreground/20 flex items-center justify-center text-primary-foreground text-sm font-bold">
-            SA
+          <div className="flex items-center gap-2">
+            <button onClick={() => navigate("/notifications")} className="w-9 h-9 rounded-full bg-primary-foreground/20 flex items-center justify-center text-primary-foreground relative">
+              <Bell size={18} />
+              <span className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-destructive border-2 border-primary" />
+            </button>
+            <div className="w-9 h-9 rounded-full bg-primary-foreground/20 flex items-center justify-center text-primary-foreground text-sm font-bold">
+              SA
+            </div>
           </div>
         </div>
 
-        {/* Stats */}
         <div className="grid grid-cols-3 gap-3">
           {[
             { value: "12", label: "Total Donations" },
@@ -56,7 +60,6 @@ const DonorDashboard = () => {
       </div>
 
       <div className="page-padding -mt-4 relative z-10">
-        {/* Quick Donate */}
         <button
           onClick={() => navigate("/donor/post")}
           className="w-full glass-card-elevated p-4 flex items-center gap-4 mb-6"
@@ -66,11 +69,10 @@ const DonorDashboard = () => {
           </div>
           <div className="text-left">
             <h3 className="font-semibold text-foreground">Post Surplus Food</h3>
-            <p className="text-xs text-muted-foreground font-body">Share food with those in need</p>
+            <p className="text-xs text-muted-foreground font-body">AI will verify quality before posting</p>
           </div>
         </button>
 
-        {/* Recent */}
         <h2 className="text-lg font-bold text-foreground mb-3">Recent Donations</h2>
         <div className="flex flex-col gap-3">
           {recentDonations.map((d) => (

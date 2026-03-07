@@ -6,20 +6,19 @@ const Welcome = () => {
 
   return (
     <div className="mobile-container flex flex-col items-center justify-center min-h-screen bg-background relative overflow-hidden">
-      {/* Background decoration */}
       <div className="absolute top-0 left-0 w-64 h-64 rounded-full bg-primary/5 -translate-x-1/2 -translate-y-1/2" />
       <div className="absolute bottom-0 right-0 w-80 h-80 rounded-full bg-secondary/5 translate-x-1/3 translate-y-1/3" />
 
       <div className="relative z-10 flex flex-col items-center gap-6 animate-fade-in px-6 text-center">
-        <img src={logo} alt="Rizq-Connect Logo" className="w-32 h-32 object-contain" />
+        <img src={logo} alt="SafeBite Logo" className="w-32 h-32 object-contain" />
         
         <div>
           <p className="text-lg text-muted-foreground font-body mb-1">Welcome to</p>
           <h1 className="text-5xl font-extrabold text-primary tracking-tight">
-            Rizq-Connect
+            SafeBite
           </h1>
           <p className="text-sm text-muted-foreground font-body mt-3 max-w-xs">
-            AI-Powered Smart Food Redistribution & Charity Platform
+            AI-Powered Smart Food Redistribution & Quality Verification Platform
           </p>
         </div>
 
