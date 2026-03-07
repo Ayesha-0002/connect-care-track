@@ -13,7 +13,7 @@ const donorNav = [
 type Message = { id: number; text: string; sender: "user" | "bot" };
 
 const initialMessages: Message[] = [
-  { id: 1, text: "Assalam-o-Alaikum! I'm your Rizq-Connect AI assistant. How can I help you today? 🤝", sender: "bot" },
+  { id: 1, text: "Assalam-o-Alaikum! I'm your SafeBite AI assistant. How can I help you today? 🤝", sender: "bot" },
 ];
 
 const DonorChat = () => {
@@ -44,7 +44,7 @@ const DonorChat = () => {
             <Bot size={20} className="text-primary-foreground" />
           </div>
           <div>
-            <h1 className="text-lg font-bold text-foreground">AI Chatbot</h1>
+            <h1 className="text-lg font-bold text-foreground">SafeBite AI</h1>
             <p className="text-xs text-primary font-body">Online</p>
           </div>
         </div>

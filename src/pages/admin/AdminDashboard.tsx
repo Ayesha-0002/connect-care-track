@@ -35,7 +35,7 @@ const AdminDashboard = () => {
         <aside className="w-64 gradient-dark min-h-screen p-6 flex flex-col">
           <div className="flex items-center gap-3 mb-10">
             <img src={logo} alt="Logo" className="w-8 h-8" />
-            <span className="text-lg font-bold text-primary-foreground">Rizq-Connect</span>
+            <span className="text-lg font-bold text-primary-foreground">SafeBite Admin</span>
           </div>
           <nav className="flex flex-col gap-1 flex-1">
             {[
@@ -74,7 +74,7 @@ const AdminDashboard = () => {
             <div className="flex items-center gap-3">
               <Shield size={24} className="text-primary-foreground" />
               <div>
-                <h1 className="text-lg font-bold text-primary-foreground">Admin Panel</h1>
+                <h1 className="text-lg font-bold text-primary-foreground">SafeBite Admin</h1>
                 <p className="text-xs text-primary-foreground/70">Control Room</p>
               </div>
             </div>
@@ -82,7 +82,6 @@ const AdminDashboard = () => {
           </div>
         </div>
 
-        {/* Tabs */}
         <div className="flex gap-1 px-4 mt-4 overflow-x-auto">
           {tabs.map((tab) => (
             <button
@@ -175,12 +174,12 @@ const AdminContent = ({ activeTab }: { activeTab: string }) => {
     );
   }
 
-  // User Management
   const users = [
-    { name: "Sushil Kumar", role: "Donor", status: "Active", donations: 12 },
-    { name: "Vikas Rajshri", role: "Volunteer", status: "Active", donations: 26 },
+    { name: "Ahmed Khan", role: "Donor", status: "Active", donations: 12 },
+    { name: "Fatima Rizvi", role: "Volunteer", status: "Active", donations: 26 },
     { name: "Mama's Kitchen", role: "Donor", status: "Active", donations: 8 },
     { name: "Ali Ahmed", role: "Volunteer", status: "Suspended", donations: 3 },
+    { name: "Edhi Foundation", role: "NGO", status: "Active", donations: 45 },
   ];
 
   return (

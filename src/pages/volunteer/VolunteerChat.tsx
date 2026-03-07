@@ -14,7 +14,7 @@ type Message = { id: number; text: string; sender: "user" | "bot" };
 
 const VolunteerChat = () => {
   const [messages, setMessages] = useState<Message[]>([
-    { id: 1, text: "Assalam-o-Alaikum! I'm here to help you with pickups and deliveries. 🚗", sender: "bot" },
+    { id: 1, text: "Assalam-o-Alaikum! I'm your SafeBite AI assistant. I can help you with pickups and deliveries. 🚗", sender: "bot" },
   ]);
   const [input, setInput] = useState("");
 
@@ -38,7 +38,7 @@ const VolunteerChat = () => {
             <Bot size={20} className="text-primary-foreground" />
           </div>
           <div>
-            <h1 className="text-lg font-bold text-foreground">AI Assistant</h1>
+            <h1 className="text-lg font-bold text-foreground">SafeBite AI</h1>
             <p className="text-xs text-primary font-body">Online</p>
           </div>
         </div>

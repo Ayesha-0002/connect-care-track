@@ -1,4 +1,4 @@
-import { Home, MapPin, Package, MessageCircle, User, Navigation } from "lucide-react";
+import { Home, MapPin, Package, MessageCircle, User, Navigation, Bell } from "lucide-react";
 import BottomNav from "@/components/BottomNav";
 import logo from "@/assets/rizq-logo.png";
 import biryani from "@/assets/food-biryani.jpg";
@@ -15,9 +15,9 @@ const volunteerNav = [
 ];
 
 const availablePickups = [
-  { id: 1, title: "Biryani for 25", donor: "Laziz Swaad Restaurant", distance: "1.2 km", time: "30 min left", img: biryani, verified: true },
-  { id: 2, title: "Fresh Cake - 10 pcs", donor: "Sweet Corner Bakery", distance: "2.5 km", time: "1 hr left", img: cake, verified: true },
-  { id: 3, title: "Dal Chawal for 15", donor: "Mama's Kitchen", distance: "0.8 km", time: "45 min left", img: dal, verified: true },
+  { id: 1, title: "Biryani for 25", donor: "Royal Restaurant, Gulberg", distance: "1.2 km", time: "30 min left", img: biryani, verified: true },
+  { id: 2, title: "Fresh Cake - 10 pcs", donor: "Sweet Corner, DHA", distance: "2.5 km", time: "1 hr left", img: cake, verified: true },
+  { id: 3, title: "Dal Chawal for 15", donor: "Mama's Kitchen, Model Town", distance: "0.8 km", time: "45 min left", img: dal, verified: true },
 ];
 
 const VolunteerDashboard = () => {
@@ -30,12 +30,18 @@ const VolunteerDashboard = () => {
           <div className="flex items-center gap-3">
             <img src={logo} alt="Logo" className="w-9 h-9" />
             <div>
-              <h1 className="text-lg font-bold text-primary-foreground">Rizq-Connect</h1>
+              <h1 className="text-lg font-bold text-primary-foreground">SafeBite</h1>
               <p className="text-xs text-primary-foreground/70">Volunteer Dashboard</p>
             </div>
           </div>
-          <div className="w-9 h-9 rounded-full bg-primary-foreground/20 flex items-center justify-center text-primary-foreground text-sm font-bold">
-            VK
+          <div className="flex items-center gap-2">
+            <button onClick={() => navigate("/notifications")} className="w-9 h-9 rounded-full bg-primary-foreground/20 flex items-center justify-center text-primary-foreground relative">
+              <Bell size={18} />
+              <span className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-destructive border-2 border-primary animate-pulse-dot" />
+            </button>
+            <div className="w-9 h-9 rounded-full bg-primary-foreground/20 flex items-center justify-center text-primary-foreground text-sm font-bold">
+              VK
+            </div>
           </div>
         </div>
 
@@ -54,17 +60,16 @@ const VolunteerDashboard = () => {
       </div>
 
       <div className="page-padding -mt-4 relative z-10">
-        {/* Live Tracking Button */}
         <button
           onClick={() => navigate("/volunteer/tracking")}
           className="w-full glass-card-elevated p-4 flex items-center gap-4 mb-6"
         >
           <div className="w-12 h-12 rounded-2xl bg-secondary/10 flex items-center justify-center relative">
             <Navigation size={24} className="text-secondary" />
-            <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-success animate-pulse-dot" />
+            <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-primary animate-pulse-dot" />
           </div>
           <div className="text-left">
-            <h3 className="font-semibold text-foreground">Live Tracking</h3>
+            <h3 className="font-semibold text-foreground">Live GPS Tracking</h3>
             <p className="text-xs text-muted-foreground font-body">Active pickup: Biryani → Shelter Home</p>
           </div>
         </button>
@@ -87,8 +92,11 @@ const VolunteerDashboard = () => {
                   </div>
                 </div>
               </div>
-              <button className="w-full mt-3 py-2.5 rounded-xl font-semibold text-primary-foreground gradient-primary text-sm transition-all hover:opacity-90 active:scale-[0.98]">
-                Accept Pickup
+              <button
+                onClick={() => navigate("/volunteer/tracking")}
+                className="w-full mt-3 py-2.5 rounded-xl font-semibold text-primary-foreground gradient-primary text-sm transition-all hover:opacity-90 active:scale-[0.98]"
+              >
+                Accept & Track Pickup
               </button>
             </div>
           ))}

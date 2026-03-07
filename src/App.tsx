@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Welcome from "./pages/Welcome";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -18,6 +18,7 @@ import VolunteerPickups from "./pages/volunteer/VolunteerPickups";
 import VolunteerChat from "./pages/volunteer/VolunteerChat";
 import VolunteerProfile from "./pages/volunteer/VolunteerProfile";
 import AdminDashboard from "./pages/admin/AdminDashboard";
+import Notifications from "./pages/Notifications";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -33,6 +34,7 @@ const App = () => (
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/select-role" element={<SelectRole />} />
+          <Route path="/notifications" element={<Notifications />} />
           
           {/* Donor Routes */}
           <Route path="/donor" element={<DonorDashboard />} />
