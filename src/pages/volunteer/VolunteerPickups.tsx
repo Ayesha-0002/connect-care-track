@@ -158,7 +158,5 @@ const VolunteerPickups = () => {
   );
 };
 
-// Need Camera icon
-import { Camera } from "lucide-react";
 
 export default VolunteerPickups;
