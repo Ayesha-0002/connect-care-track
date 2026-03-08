@@ -1,17 +1,47 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { ArrowLeft, Eye, EyeOff } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 import heroImg from "@/assets/hero-food-donation.jpg";
 
 const Login = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    navigate("/select-role");
+    if (!email || !password) {
+      toast({ title: "Error", description: "Please fill all fields", variant: "destructive" });
+      return;
+    }
+    setLoading(true);
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    setLoading(false);
+
+    if (error) {
+      toast({ title: "Login Failed", description: error.message, variant: "destructive" });
+      return;
+    }
+
+    // Fetch user role and redirect
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data: roleData } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (roleData?.role === "donor") navigate("/donor");
+      else if (roleData?.role === "volunteer") navigate("/volunteer");
+      else if (roleData?.role === "admin") navigate("/admin");
+      else navigate("/select-role");
+    }
   };
 
   return (
@@ -33,9 +63,9 @@ const Login = () => {
 
         <form onSubmit={handleLogin} className="flex flex-col gap-4">
           <div>
-            <label className="text-sm font-medium text-foreground mb-1.5 block">Email / Username</label>
+            <label className="text-sm font-medium text-foreground mb-1.5 block">Email</label>
             <input
-              type="text"
+              type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Enter your email"
@@ -63,13 +93,12 @@ const Login = () => {
             </div>
           </div>
 
-          <Link to="#" className="text-primary text-sm font-medium self-end -mt-1">Forgot password?</Link>
-
           <button
             type="submit"
-            className="w-full py-3.5 rounded-xl font-semibold text-primary-foreground gradient-primary transition-all hover:opacity-90 active:scale-[0.98] mt-2"
+            disabled={loading}
+            className="w-full py-3.5 rounded-xl font-semibold text-primary-foreground gradient-primary transition-all hover:opacity-90 active:scale-[0.98] mt-2 disabled:opacity-50"
           >
-            Log In
+            {loading ? "Logging in..." : "Log In"}
           </button>
 
           <div className="flex items-center gap-3 my-2">
