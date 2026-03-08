@@ -1,10 +1,9 @@
-import { Home, MapPin, Package, MessageCircle, User, Navigation, Bell } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Home, MapPin, Package, MessageCircle, User, Navigation, Bell, Loader2 } from "lucide-react";
 import BottomNav from "@/components/BottomNav";
 import logo from "@/assets/rizq-logo.png";
-import biryani from "@/assets/food-biryani.jpg";
-import cake from "@/assets/food-cake.jpg";
-import dal from "@/assets/food-dal.jpg";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 
 const volunteerNav = [
   { icon: Home, label: "Home", path: "/volunteer" },
@@ -14,14 +13,48 @@ const volunteerNav = [
   { icon: User, label: "Profile", path: "/volunteer/profile" },
 ];
 
-const availablePickups = [
-  { id: 1, title: "Biryani for 25", donor: "Royal Restaurant, Gulberg", distance: "1.2 km", time: "30 min left", img: biryani, verified: true },
-  { id: 2, title: "Fresh Cake - 10 pcs", donor: "Sweet Corner, DHA", distance: "2.5 km", time: "1 hr left", img: cake, verified: true },
-  { id: 3, title: "Dal Chawal for 15", donor: "Mama's Kitchen, Model Town", distance: "0.8 km", time: "45 min left", img: dal, verified: true },
-];
-
 const VolunteerDashboard = () => {
   const navigate = useNavigate();
+  const [pickups, setPickups] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({ done: 0, active: 0 });
+
+  useEffect(() => {
+    const fetch = async () => {
+      const { data } = await supabase
+        .from("food_donations")
+        .select("*")
+        .eq("status", "posted")
+        .eq("ai_safe", true)
+        .order("created_at", { ascending: false })
+        .limit(10);
+      setPickups(data || []);
+
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: tracking } = await supabase.from("volunteer_tracking").select("*").eq("volunteer_id", user.id);
+        setStats({
+          done: (tracking || []).filter(t => t.status === "delivered").length,
+          active: (tracking || []).filter(t => t.status !== "delivered").length,
+        });
+      }
+      setLoading(false);
+    };
+    fetch();
+  }, []);
+
+  const getImageUrl = (url: string | null) => {
+    if (!url) return null;
+    if (url.startsWith("http")) return url;
+    return `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/food-images/${url}`;
+  };
+
+  const handleAcceptPickup = async (donationId: string) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    await supabase.from("food_donations").update({ assigned_volunteer_id: user.id, status: "picked_up" }).eq("id", donationId);
+    navigate(`/volunteer/tracking?donation=${donationId}`);
+  };
 
   return (
     <div className="mobile-container min-h-screen bg-background pb-20">
@@ -39,17 +72,13 @@ const VolunteerDashboard = () => {
               <Bell size={18} />
               <span className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-destructive border-2 border-primary animate-pulse-dot" />
             </button>
-            <div className="w-9 h-9 rounded-full bg-primary-foreground/20 flex items-center justify-center text-primary-foreground text-sm font-bold">
-              VK
-            </div>
           </div>
         </div>
-
         <div className="grid grid-cols-3 gap-3">
           {[
-            { value: "26", label: "Pickups Done" },
+            { value: stats.done.toString(), label: "Pickups Done" },
             { value: "4.9", label: "Rating" },
-            { value: "3", label: "Active" },
+            { value: stats.active.toString(), label: "Active" },
           ].map((stat) => (
             <div key={stat.label} className="bg-primary-foreground/10 backdrop-blur rounded-xl p-3 text-center">
               <p className="text-2xl font-bold text-primary-foreground">{stat.value}</p>
@@ -60,49 +89,60 @@ const VolunteerDashboard = () => {
       </div>
 
       <div className="page-padding -mt-4 relative z-10">
-        <button
-          onClick={() => navigate("/volunteer/tracking")}
-          className="w-full glass-card-elevated p-4 flex items-center gap-4 mb-6"
-        >
+        <button onClick={() => navigate("/volunteer/tracking")} className="w-full glass-card-elevated p-4 flex items-center gap-4 mb-6">
           <div className="w-12 h-12 rounded-2xl bg-secondary/10 flex items-center justify-center relative">
             <Navigation size={24} className="text-secondary" />
             <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-primary animate-pulse-dot" />
           </div>
           <div className="text-left">
             <h3 className="font-semibold text-foreground">Live GPS Tracking</h3>
-            <p className="text-xs text-muted-foreground font-body">Active pickup: Biryani → Shelter Home</p>
+            <p className="text-xs text-muted-foreground font-body">Track your active deliveries</p>
           </div>
         </button>
 
         <h2 className="text-lg font-bold text-foreground mb-3">Available Pickups</h2>
-        <div className="flex flex-col gap-3">
-          {availablePickups.map((p) => (
-            <div key={p.id} className="food-card p-3">
-              <div className="flex items-center gap-3">
-                <img src={p.img} alt={p.title} className="w-16 h-16 rounded-xl object-cover" />
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <h4 className="font-semibold text-foreground text-sm truncate">{p.title}</h4>
-                    {p.verified && <span className="badge-verified text-[10px]">AI ✓</span>}
+        {loading ? (
+          <div className="flex items-center justify-center py-10"><Loader2 className="animate-spin text-primary" size={28} /></div>
+        ) : pickups.length === 0 ? (
+          <div className="text-center py-10">
+            <Package size={40} className="text-muted-foreground mx-auto mb-2" />
+            <p className="text-sm text-muted-foreground font-body">No available pickups right now</p>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-3">
+            {pickups.map((p) => {
+              const imgUrl = getImageUrl(p.image_url);
+              return (
+                <div key={p.id} className="food-card p-3">
+                  <div className="flex items-center gap-3">
+                    {imgUrl ? (
+                      <img src={imgUrl} alt={p.title} className="w-16 h-16 rounded-xl object-cover" />
+                    ) : (
+                      <div className="w-16 h-16 rounded-xl bg-muted flex items-center justify-center">
+                        <Package size={24} className="text-muted-foreground" />
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-semibold text-foreground text-sm truncate">{p.title}</h4>
+                        {p.ai_safe && <span className="badge-verified text-[10px]">AI ✓</span>}
+                      </div>
+                      <p className="text-xs text-muted-foreground font-body">📍 {p.location}</p>
+                      <div className="flex items-center gap-3 mt-1">
+                        <span className="text-xs text-muted-foreground">🍽 {p.quantity} servings</span>
+                        <span className="text-xs text-muted-foreground">📅 {p.pickup_day}</span>
+                      </div>
+                    </div>
                   </div>
-                  <p className="text-xs text-muted-foreground font-body">{p.donor}</p>
-                  <div className="flex items-center gap-3 mt-1">
-                    <span className="text-xs text-muted-foreground">📍 {p.distance}</span>
-                    <span className="text-xs text-warning font-medium">⏱ {p.time}</span>
-                  </div>
+                  <button onClick={() => handleAcceptPickup(p.id)} className="w-full mt-3 py-2.5 rounded-xl font-semibold text-primary-foreground gradient-primary text-sm transition-all hover:opacity-90 active:scale-[0.98]">
+                    Accept & Track Pickup
+                  </button>
                 </div>
-              </div>
-              <button
-                onClick={() => navigate("/volunteer/tracking")}
-                className="w-full mt-3 py-2.5 rounded-xl font-semibold text-primary-foreground gradient-primary text-sm transition-all hover:opacity-90 active:scale-[0.98]"
-              >
-                Accept & Track Pickup
-              </button>
-            </div>
-          ))}
-        </div>
+              );
+            })}
+          </div>
+        )}
       </div>
-
       <BottomNav items={volunteerNav} />
     </div>
   );

@@ -46,10 +46,14 @@ export type Database = {
           ai_safe: boolean | null
           assigned_volunteer_id: string | null
           created_at: string | null
+          delivery_photo_url: string | null
           donor_id: string
           id: string
           image_url: string | null
           location: string
+          ngo_verified: boolean | null
+          ngo_verified_at: string | null
+          ngo_verified_by: string | null
           notes: string | null
           pickup_day: string
           quantity: number
@@ -64,10 +68,14 @@ export type Database = {
           ai_safe?: boolean | null
           assigned_volunteer_id?: string | null
           created_at?: string | null
+          delivery_photo_url?: string | null
           donor_id: string
           id?: string
           image_url?: string | null
           location: string
+          ngo_verified?: boolean | null
+          ngo_verified_at?: string | null
+          ngo_verified_by?: string | null
           notes?: string | null
           pickup_day: string
           quantity: number
@@ -82,10 +90,14 @@ export type Database = {
           ai_safe?: boolean | null
           assigned_volunteer_id?: string | null
           created_at?: string | null
+          delivery_photo_url?: string | null
           donor_id?: string
           id?: string
           image_url?: string | null
           location?: string
+          ngo_verified?: boolean | null
+          ngo_verified_at?: string | null
+          ngo_verified_by?: string | null
           notes?: string | null
           pickup_day?: string
           quantity?: number
