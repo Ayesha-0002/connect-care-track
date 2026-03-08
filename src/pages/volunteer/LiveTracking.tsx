@@ -1,29 +1,111 @@
-import { useState, useEffect } from "react";
-import { ArrowLeft, Navigation, MapPin, Phone, MessageCircle, Camera, CheckCircle, Locate } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect, useCallback } from "react";
+import { ArrowLeft, Phone, MessageCircle, Camera, CheckCircle, Locate, Loader2, AlertTriangle } from "lucide-react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import LeafletMap from "@/components/LeafletMap";
 
 const LiveTracking = () => {
   const navigate = useNavigate();
-  const [eta, setEta] = useState(20);
-  const [distance, setDistance] = useState(10.3);
-  const [status, setStatus] = useState<"en-route" | "arrived" | "delivered">("en-route");
-  const [dotPosition, setDotPosition] = useState(0);
+  const [searchParams] = useSearchParams();
+  const donationId = searchParams.get("donation");
 
-  // Simulate live GPS movement
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setDotPosition((prev) => {
-        if (prev >= 100) return 0;
-        return prev + 2;
-      });
-      setEta((prev) => Math.max(0, prev - 0.1));
-      setDistance((prev) => Math.max(0, +(prev - 0.02).toFixed(1)));
-    }, 500);
-    return () => clearInterval(interval);
+  const [status, setStatus] = useState<"en-route" | "arrived" | "delivered">("en-route");
+  const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [gpsError, setGpsError] = useState<string | null>(null);
+  const [eta, setEta] = useState(20);
+  const [distance, setDistance] = useState(5.2);
+
+  // Simulated pickup & dropoff (in production, fetch from donation)
+  const pickupLat = 31.5204;
+  const pickupLng = 74.3587;
+  const dropoffLat = 31.4804;
+  const dropoffLng = 74.3187;
+
+  // Calculate distance between two points
+  const calcDistance = useCallback((lat1: number, lng1: number, lat2: number, lng2: number) => {
+    const R = 6371;
+    const dLat = ((lat2 - lat1) * Math.PI) / 180;
+    const dLng = ((lng2 - lng1) * Math.PI) / 180;
+    const a = Math.sin(dLat / 2) ** 2 + Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLng / 2) ** 2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   }, []);
 
-  const handleConfirmDelivery = () => {
+  // Update location to database
+  const updateLocationInDb = useCallback(async (lat: number, lng: number) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user || !donationId) return;
+
+    const { data: existing } = await supabase
+      .from("volunteer_tracking")
+      .select("id")
+      .eq("volunteer_id", user.id)
+      .eq("donation_id", donationId)
+      .maybeSingle();
+
+    if (existing) {
+      await supabase
+        .from("volunteer_tracking")
+        .update({ latitude: lat, longitude: lng, status, updated_at: new Date().toISOString() })
+        .eq("id", existing.id);
+    } else {
+      await supabase
+        .from("volunteer_tracking")
+        .insert({ volunteer_id: user.id, donation_id: donationId, latitude: lat, longitude: lng, status });
+    }
+  }, [donationId, status]);
+
+  // Watch GPS position
+  useEffect(() => {
+    if (!navigator.geolocation) {
+      setGpsError("Geolocation is not supported by your browser");
+      return;
+    }
+
+    const watchId = navigator.geolocation.watchPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        setLocation({ lat: latitude, lng: longitude });
+        setGpsError(null);
+
+        // Calculate distance to dropoff
+        const dist = calcDistance(latitude, longitude, dropoffLat, dropoffLng);
+        setDistance(+dist.toFixed(1));
+        // Estimate ETA at ~30km/h avg speed
+        setEta(Math.ceil((dist / 30) * 60));
+
+        // Auto-detect arrival
+        if (dist < 0.1) setStatus("arrived");
+
+        // Update DB every position change
+        updateLocationInDb(latitude, longitude);
+      },
+      (error) => {
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            setGpsError("Location permission denied. Please enable GPS.");
+            break;
+          case error.POSITION_UNAVAILABLE:
+            setGpsError("Location unavailable. Check your GPS.");
+            break;
+          default:
+            setGpsError("Unable to get location.");
+        }
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 3000 }
+    );
+
+    return () => navigator.geolocation.clearWatch(watchId);
+  }, [calcDistance, updateLocationInDb]);
+
+  const handleConfirmDelivery = async () => {
     setStatus("delivered");
+    if (donationId) {
+      await supabase.from("food_donations").update({ status: "delivered" }).eq("id", donationId);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await supabase.from("volunteer_tracking").update({ status: "delivered" }).eq("volunteer_id", user.id).eq("donation_id", donationId);
+      }
+    }
   };
 
   if (status === "delivered") {
@@ -48,11 +130,6 @@ const LiveTracking = () => {
     );
   }
 
-  // Calculate animated dot position along path
-  const pathProgress = dotPosition / 100;
-  const animX = 80 + (340 - 80) * pathProgress;
-  const animY = 250 - 190 * pathProgress + Math.sin(pathProgress * Math.PI) * -40;
-
   return (
     <div className="mobile-container min-h-screen bg-background">
       <div className="flex items-center gap-3 px-5 pt-5 pb-3">
@@ -67,34 +144,32 @@ const LiveTracking = () => {
       </div>
 
       {/* Map */}
-      <div className="mx-4 h-72 rounded-2xl bg-accent/50 border border-border relative overflow-hidden">
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="text-center">
-            <div className="w-12 h-12 rounded-full gradient-primary flex items-center justify-center mx-auto mb-2 animate-pulse-dot">
-              <Navigation size={20} className="text-primary-foreground" />
-            </div>
-            <p className="text-sm font-medium text-foreground">Real-Time GPS Active</p>
-            <p className="text-xs text-muted-foreground font-body">Lahore, Pakistan</p>
+      <div className="mx-4 rounded-2xl overflow-hidden border border-border">
+        {gpsError ? (
+          <div className="h-72 flex flex-col items-center justify-center bg-muted/50 gap-3 p-6">
+            <AlertTriangle size={32} className="text-destructive" />
+            <p className="text-sm text-foreground font-medium text-center">{gpsError}</p>
+            <p className="text-xs text-muted-foreground font-body text-center">
+              Please enable location services and refresh
+            </p>
           </div>
-        </div>
-        
-        <svg className="absolute inset-0 w-full h-full" viewBox="0 0 400 300">
-          {/* Route path */}
-          <path d="M 80 250 C 120 200, 150 150, 200 130 S 300 80, 340 60" stroke="hsl(160, 84%, 39%)" strokeWidth="3" fill="none" strokeDasharray="8 4" />
-          {/* Start point */}
-          <circle cx="80" cy="250" r="8" fill="hsl(160, 84%, 39%)" />
-          <text x="80" y="270" textAnchor="middle" fontSize="8" fill="hsl(160, 84%, 39%)">Pickup</text>
-          {/* End point */}
-          <circle cx="340" cy="60" r="8" fill="hsl(0, 72%, 51%)" />
-          <text x="340" y="50" textAnchor="middle" fontSize="8" fill="hsl(0, 72%, 51%)">Drop-off</text>
-          {/* Moving dot */}
-          <circle cx={animX} cy={animY} r="7" fill="hsl(38, 92%, 50%)" className="drop-shadow-lg">
-            <animate attributeName="r" values="6;8;6" dur="1s" repeatCount="indefinite" />
-          </circle>
-          <circle cx={animX} cy={animY} r="14" fill="hsl(38, 92%, 50%)" opacity="0.2">
-            <animate attributeName="r" values="12;18;12" dur="1.5s" repeatCount="indefinite" />
-          </circle>
-        </svg>
+        ) : !location ? (
+          <div className="h-72 flex flex-col items-center justify-center bg-muted/50 gap-3">
+            <Loader2 size={32} className="text-primary animate-spin" />
+            <p className="text-sm text-foreground font-medium">Getting GPS location...</p>
+            <p className="text-xs text-muted-foreground font-body">Please allow location access</p>
+          </div>
+        ) : (
+          <LeafletMap
+            latitude={location.lat}
+            longitude={location.lng}
+            pickupLat={pickupLat}
+            pickupLng={pickupLng}
+            dropoffLat={dropoffLat}
+            dropoffLng={dropoffLng}
+            className="h-72"
+          />
+        )}
       </div>
 
       {/* Distance info */}
@@ -106,12 +181,14 @@ const LiveTracking = () => {
         <div className="h-8 w-px bg-border" />
         <div>
           <p className="text-xs text-muted-foreground font-body">ETA</p>
-          <p className="text-lg font-bold text-foreground">{Math.ceil(eta)} min</p>
+          <p className="text-lg font-bold text-foreground">{eta} min</p>
         </div>
         <div className="h-8 w-px bg-border" />
         <div>
           <p className="text-xs text-muted-foreground font-body">Status</p>
-          <p className="text-sm font-bold text-primary">En Route 🚗</p>
+          <p className="text-sm font-bold text-primary">
+            {status === "arrived" ? "Arrived 📍" : "En Route 🚗"}
+          </p>
         </div>
       </div>
 
@@ -121,7 +198,7 @@ const LiveTracking = () => {
         <div className="flex items-start gap-3 mb-3">
           <div className="w-3 h-3 rounded-full bg-primary mt-1" />
           <div>
-            <p className="text-sm font-medium text-foreground">Royal Restaurant</p>
+            <p className="text-sm font-medium text-foreground">Pickup Point</p>
             <p className="text-xs text-muted-foreground font-body">Gulberg III, Lahore</p>
           </div>
         </div>
@@ -129,7 +206,7 @@ const LiveTracking = () => {
         <div className="flex items-start gap-3">
           <div className="w-3 h-3 rounded-full bg-destructive mt-1" />
           <div>
-            <p className="text-sm font-medium text-foreground">Edhi Foundation Shelter</p>
+            <p className="text-sm font-medium text-foreground">Drop-off Point</p>
             <p className="text-xs text-muted-foreground font-body">Model Town, Lahore</p>
           </div>
         </div>
