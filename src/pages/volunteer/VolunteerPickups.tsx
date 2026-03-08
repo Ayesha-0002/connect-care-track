@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Home, MapPin, Package, MessageCircle, User, Loader2, CheckCircle } from "lucide-react";
+import { Home, MapPin, Package, MessageCircle, User, Loader2, CheckCircle, Camera } from "lucide-react";
 import BottomNav from "@/components/BottomNav";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
