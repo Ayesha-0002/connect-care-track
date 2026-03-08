@@ -1,8 +1,7 @@
-import { Home, PlusCircle, Clock, MessageCircle, User } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Home, PlusCircle, Clock, MessageCircle, User, Package, Loader2 } from "lucide-react";
 import BottomNav from "@/components/BottomNav";
-import biryani from "@/assets/food-biryani.jpg";
-import cake from "@/assets/food-cake.jpg";
-import dal from "@/assets/food-dal.jpg";
+import { supabase } from "@/integrations/supabase/client";
 
 const donorNav = [
   { icon: Home, label: "Home", path: "/donor" },
@@ -12,37 +11,81 @@ const donorNav = [
   { icon: User, label: "Profile", path: "/donor/profile" },
 ];
 
-const history = [
-  { id: 1, title: "Biryani for 25", location: "Green Park", date: "12 Jan 2025", img: biryani, status: "Delivered" },
-  { id: 2, title: "Fresh Cake", location: "Malviya Nagar", date: "10 Jan 2025", img: cake, status: "Delivered" },
-  { id: 3, title: "Dal Chawal for 15", location: "Saket", date: "8 Jan 2025", img: dal, status: "Delivered" },
-  { id: 4, title: "Noodle Soup for 10", location: "Green Park", date: "5 Jan 2025", img: biryani, status: "Expired" },
-];
-
 const DonorHistory = () => {
+  const [donations, setDonations] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetch = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { setLoading(false); return; }
+      const { data } = await supabase
+        .from("food_donations")
+        .select("*")
+        .eq("donor_id", user.id)
+        .order("created_at", { ascending: false });
+      setDonations(data || []);
+      setLoading(false);
+    };
+    fetch();
+  }, []);
+
+  const getImageUrl = (url: string | null) => {
+    if (!url) return null;
+    if (url.startsWith("http")) return url;
+    return `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/food-images/${url}`;
+  };
+
+  const getStatusBadge = (d: any) => {
+    if (d.ngo_verified) return { label: "NGO Verified ✓", cls: "badge-verified" };
+    if (d.status === "delivered") return { label: "Delivered", cls: "badge-verified" };
+    if (d.status === "picked_up") return { label: "Picked Up", cls: "px-2 py-1 rounded-full text-xs font-medium bg-secondary/20 text-secondary" };
+    if (d.status === "posted") return { label: "Active", cls: "px-2 py-1 rounded-full text-xs font-medium bg-primary/20 text-primary" };
+    return { label: d.status || "Unknown", cls: "badge-fraud" };
+  };
+
   return (
     <div className="mobile-container min-h-screen bg-background pb-20">
       <div className="px-5 pt-6 pb-3">
         <h1 className="text-2xl font-bold text-foreground">Your Donations</h1>
-        <p className="text-sm text-muted-foreground font-body">Total: {history.length} donations</p>
+        <p className="text-sm text-muted-foreground font-body">Total: {donations.length} donations</p>
       </div>
 
       <div className="page-padding flex flex-col gap-3">
-        {history.map((d) => (
-          <div key={d.id} className="food-card flex items-center gap-3 p-3">
-            <img src={d.img} alt={d.title} className="w-16 h-16 rounded-xl object-cover" />
-            <div className="flex-1 min-w-0">
-              <h4 className="font-semibold text-foreground text-sm truncate">{d.title}</h4>
-              <p className="text-xs text-muted-foreground font-body">📍 {d.location}</p>
-              <p className="text-xs text-muted-foreground font-body">🗓 {d.date}</p>
-            </div>
-            <span className={d.status === "Delivered" ? "badge-verified" : "badge-fraud"}>
-              {d.status}
-            </span>
+        {loading ? (
+          <div className="flex items-center justify-center py-20"><Loader2 className="animate-spin text-primary" size={32} /></div>
+        ) : donations.length === 0 ? (
+          <div className="text-center py-20">
+            <Package size={48} className="text-muted-foreground mx-auto mb-3" />
+            <p className="text-muted-foreground font-body">No donations yet. Start donating!</p>
           </div>
-        ))}
+        ) : (
+          donations.map((d) => {
+            const badge = getStatusBadge(d);
+            const imgUrl = getImageUrl(d.image_url);
+            return (
+              <div key={d.id} className="food-card flex items-center gap-3 p-3">
+                {imgUrl ? (
+                  <img src={imgUrl} alt={d.title} className="w-16 h-16 rounded-xl object-cover" />
+                ) : (
+                  <div className="w-16 h-16 rounded-xl bg-muted flex items-center justify-center">
+                    <Package size={24} className="text-muted-foreground" />
+                  </div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <h4 className="font-semibold text-foreground text-sm truncate">{d.title}</h4>
+                  <p className="text-xs text-muted-foreground font-body">📍 {d.location}</p>
+                  <p className="text-xs text-muted-foreground font-body">🗓 {new Date(d.created_at).toLocaleDateString()}</p>
+                  {d.ai_quality_score && (
+                    <p className="text-xs text-muted-foreground font-body">🤖 Score: {d.ai_quality_score}/100</p>
+                  )}
+                </div>
+                <span className={badge.cls}>{badge.label}</span>
+              </div>
+            );
+          })
+        )}
       </div>
-
       <BottomNav items={donorNav} />
     </div>
   );
