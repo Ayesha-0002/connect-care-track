@@ -13,6 +13,13 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const navigateByRole = (role: string) => {
+    if (role === "donor") navigate("/donor");
+    else if (role === "volunteer") navigate("/volunteer");
+    else if (role === "admin") navigate("/admin");
+    else navigate("/select-role");
+  };
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) {
@@ -35,12 +42,41 @@ const Login = () => {
         .from("user_roles")
         .select("role")
         .eq("user_id", user.id)
+        .order("role", { ascending: true })
+        .limit(1)
         .maybeSingle();
 
-      if (roleData?.role === "donor") navigate("/donor");
-      else if (roleData?.role === "volunteer") navigate("/volunteer");
-      else if (roleData?.role === "admin") navigate("/admin");
-      else navigate("/select-role");
+      if (roleData?.role) {
+        navigateByRole(roleData.role);
+        return;
+      }
+
+      const { data: requestData } = await supabase
+        .from("registration_requests")
+        .select("status")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (requestData?.status === "pending") {
+        toast({
+          title: "Approval pending",
+          description: "Aap ki request abhi approve honi baqi hai.",
+        });
+        navigate("/");
+        return;
+      }
+
+      if (requestData?.status === "rejected") {
+        toast({
+          title: "Request rejected",
+          description: "Aap dobara role request submit kar sakti hain.",
+          variant: "destructive",
+        });
+      }
+
+      navigate("/select-role");
     }
   };
 
