@@ -41,6 +41,12 @@ const SelectRole = () => {
   const { toast } = useToast();
   const [submitting, setSubmitting] = useState(false);
 
+  const navigateByRole = (role: AppRole) => {
+    if (role === "donor") navigate("/donor");
+    else if (role === "volunteer") navigate("/volunteer");
+    else navigate("/admin");
+  };
+
   const handleRoleSelect = async (role: typeof roles[0]) => {
     if (!user) {
       navigate("/login");
@@ -48,6 +54,28 @@ const SelectRole = () => {
     }
 
     setSubmitting(true);
+
+    const { data: existingRequest } = await supabase
+      .from("registration_requests")
+      .select("status, requested_role")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (existingRequest?.status === "pending") {
+      setSubmitting(false);
+      toast({ title: "Already submitted", description: "Aap ki request pehle se pending hai." });
+      return;
+    }
+
+    if (existingRequest?.status === "approved") {
+      setSubmitting(false);
+      toast({ title: "Already approved", description: "Aap ka account approve ho chuka hai." });
+      navigateByRole(existingRequest.requested_role);
+      return;
+    }
+
     // Submit registration request for approval
     const { error } = await supabase.from("registration_requests").insert({
       user_id: user.id,
