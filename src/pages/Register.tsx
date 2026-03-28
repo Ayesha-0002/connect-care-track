@@ -1,48 +1,15 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
 import heroImg from "@/assets/hero-food-donation.jpg";
 
 const Register = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
   const [form, setForm] = useState({ name: "", phone: "", email: "", password: "" });
-  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.name || !form.email || !form.password || !form.phone) {
-      toast({ title: "Error", description: "Please fill all fields", variant: "destructive" });
-      return;
-    }
-    if (form.password.length < 6) {
-      toast({ title: "Error", description: "Password must be at least 6 characters", variant: "destructive" });
-      return;
-    }
-
-    setLoading(true);
-    const { error } = await supabase.auth.signUp({
-      email: form.email,
-      password: form.password,
-      options: {
-        data: { full_name: form.name, phone: form.phone },
-        emailRedirectTo: window.location.origin,
-      },
-    });
-    setLoading(false);
-
-    if (error) {
-      toast({ title: "Registration Failed", description: error.message, variant: "destructive" });
-      return;
-    }
-
-    toast({
-      title: "Check your email! 📧",
-      description: "We sent you a verification link. Please verify your email to continue.",
-    });
-    navigate("/login");
+    navigate("/select-role");
   };
 
   return (
@@ -67,7 +34,7 @@ const Register = () => {
             { label: "Name", key: "name", type: "text", placeholder: "Your full name" },
             { label: "Phone No.", key: "phone", type: "tel", placeholder: "+92 300 1234567" },
             { label: "Email ID", key: "email", type: "email", placeholder: "you@example.com" },
-            { label: "Password", key: "password", type: "password", placeholder: "Create a password (min 6 chars)" },
+            { label: "Password", key: "password", type: "password", placeholder: "Create a password" },
           ].map(({ label, key, type, placeholder }) => (
             <div key={key}>
               <label className="text-sm font-medium text-foreground mb-1.5 block">{label}</label>
@@ -83,10 +50,9 @@ const Register = () => {
 
           <button
             type="submit"
-            disabled={loading}
-            className="w-full py-3.5 rounded-xl font-semibold text-primary-foreground gradient-primary transition-all hover:opacity-90 active:scale-[0.98] mt-2 disabled:opacity-50"
+            className="w-full py-3.5 rounded-xl font-semibold text-primary-foreground gradient-primary transition-all hover:opacity-90 active:scale-[0.98] mt-2"
           >
-            {loading ? "Registering..." : "Submit"}
+            Submit
           </button>
 
           <p className="text-center text-sm text-muted-foreground font-body">

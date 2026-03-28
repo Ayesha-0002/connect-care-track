@@ -3,8 +3,6 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AuthProvider } from "@/contexts/AuthContext";
-import ProtectedRoute from "@/components/ProtectedRoute";
 import Welcome from "./pages/Welcome";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -31,34 +29,32 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <AuthProvider>
-          <Routes>
-            <Route path="/" element={<Welcome />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/select-role" element={<ProtectedRoute><SelectRole /></ProtectedRoute>} />
-            <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
-            
-            {/* Donor Routes */}
-            <Route path="/donor" element={<ProtectedRoute requiredRole="donor"><DonorDashboard /></ProtectedRoute>} />
-            <Route path="/donor/post" element={<ProtectedRoute requiredRole="donor"><PostFood /></ProtectedRoute>} />
-            <Route path="/donor/history" element={<ProtectedRoute requiredRole="donor"><DonorHistory /></ProtectedRoute>} />
-            <Route path="/donor/chat" element={<ProtectedRoute requiredRole="donor"><DonorChat /></ProtectedRoute>} />
-            <Route path="/donor/profile" element={<ProtectedRoute requiredRole="donor"><DonorProfile /></ProtectedRoute>} />
-            
-            {/* Volunteer Routes */}
-            <Route path="/volunteer" element={<ProtectedRoute requiredRole="volunteer"><VolunteerDashboard /></ProtectedRoute>} />
-            <Route path="/volunteer/tracking" element={<ProtectedRoute requiredRole="volunteer"><LiveTracking /></ProtectedRoute>} />
-            <Route path="/volunteer/pickups" element={<ProtectedRoute requiredRole="volunteer"><VolunteerPickups /></ProtectedRoute>} />
-            <Route path="/volunteer/chat" element={<ProtectedRoute requiredRole="volunteer"><VolunteerChat /></ProtectedRoute>} />
-            <Route path="/volunteer/profile" element={<ProtectedRoute requiredRole="volunteer"><VolunteerProfile /></ProtectedRoute>} />
-            
-            {/* Admin Routes */}
-            <Route path="/admin" element={<ProtectedRoute requiredRole="admin"><AdminDashboard /></ProtectedRoute>} />
-            
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </AuthProvider>
+        <Routes>
+          <Route path="/" element={<Welcome />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/select-role" element={<SelectRole />} />
+          <Route path="/notifications" element={<Notifications />} />
+          
+          {/* Donor Routes */}
+          <Route path="/donor" element={<DonorDashboard />} />
+          <Route path="/donor/post" element={<PostFood />} />
+          <Route path="/donor/history" element={<DonorHistory />} />
+          <Route path="/donor/chat" element={<DonorChat />} />
+          <Route path="/donor/profile" element={<DonorProfile />} />
+          
+          {/* Volunteer Routes */}
+          <Route path="/volunteer" element={<VolunteerDashboard />} />
+          <Route path="/volunteer/tracking" element={<LiveTracking />} />
+          <Route path="/volunteer/pickups" element={<VolunteerPickups />} />
+          <Route path="/volunteer/chat" element={<VolunteerChat />} />
+          <Route path="/volunteer/profile" element={<VolunteerProfile />} />
+          
+          {/* Admin Routes */}
+          <Route path="/admin" element={<AdminDashboard />} />
+          
+          <Route path="*" element={<NotFound />} />
+        </Routes>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
