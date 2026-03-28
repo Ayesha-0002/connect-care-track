@@ -1,7 +1,6 @@
-import { useEffect, useRef } from "react";
-import { Home, PlusCircle, Clock, MessageCircle, User, Send, Bot, Square, Loader2 } from "lucide-react";
+import { useState } from "react";
+import { Home, PlusCircle, Clock, MessageCircle, User, Send, Bot } from "lucide-react";
 import BottomNav from "@/components/BottomNav";
-import { useStreamChat } from "@/hooks/useStreamChat";
 
 const donorNav = [
   { icon: Home, label: "Home", path: "/donor" },
@@ -11,20 +10,30 @@ const donorNav = [
   { icon: User, label: "Profile", path: "/donor/profile" },
 ];
 
+type Message = { id: number; text: string; sender: "user" | "bot" };
+
+const initialMessages: Message[] = [
+  { id: 1, text: "Assalam-o-Alaikum! I'm your SafeBite AI assistant. How can I help you today? 🤝", sender: "bot" },
+];
+
 const DonorChat = () => {
-  const { messages, isLoading, sendMessage, stopStreaming } = useStreamChat("donor");
-  const inputRef = useRef<HTMLInputElement>(null);
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const [messages, setMessages] = useState<Message[]>(initialMessages);
+  const [input, setInput] = useState("");
 
-  useEffect(() => {
-    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
-  }, [messages]);
+  const sendMessage = () => {
+    if (!input.trim()) return;
+    const userMsg: Message = { id: Date.now(), text: input, sender: "user" };
+    setMessages((prev) => [...prev, userMsg]);
+    setInput("");
 
-  const handleSend = () => {
-    const val = inputRef.current?.value.trim();
-    if (!val || isLoading) return;
-    sendMessage(val);
-    if (inputRef.current) inputRef.current.value = "";
+    setTimeout(() => {
+      const botReply: Message = {
+        id: Date.now() + 1,
+        text: "Thank you for your message! I can help you with posting food, tracking donations, or finding nearby volunteers. What would you like to do?",
+        sender: "bot",
+      };
+      setMessages((prev) => [...prev, botReply]);
+    }, 1000);
   };
 
   return (
@@ -36,54 +45,41 @@ const DonorChat = () => {
           </div>
           <div>
             <h1 className="text-lg font-bold text-foreground">SafeBite AI</h1>
-            <p className="text-xs text-primary font-body">{isLoading ? "Typing..." : "Online"}</p>
+            <p className="text-xs text-primary font-body">Online</p>
           </div>
         </div>
       </div>
 
-      <div ref={scrollRef} className="flex-1 overflow-y-auto page-padding flex flex-col gap-3">
-        {messages.length === 0 && (
-          <div className="mr-auto max-w-[80%] p-3 rounded-2xl rounded-bl-md text-sm font-body bg-muted text-foreground">
-            Assalam-o-Alaikum! 🤝 Main SafeBite AI assistant hoon. Food donation, quality check, ya volunteers se related koi bhi sawal puchein!
-          </div>
-        )}
-        {messages.map((msg, i) => (
+      <div className="flex-1 overflow-y-auto page-padding flex flex-col gap-3">
+        {messages.map((msg) => (
           <div
-            key={i}
-            className={`max-w-[80%] p-3 rounded-2xl text-sm font-body whitespace-pre-wrap ${
-              msg.role === "user"
+            key={msg.id}
+            className={`max-w-[80%] p-3 rounded-2xl text-sm font-body ${
+              msg.sender === "user"
                 ? "ml-auto gradient-primary text-primary-foreground rounded-br-md"
                 : "mr-auto bg-muted text-foreground rounded-bl-md"
             }`}
           >
-            {msg.content}
+            {msg.text}
           </div>
         ))}
-        {isLoading && messages[messages.length - 1]?.role !== "assistant" && (
-          <div className="mr-auto flex items-center gap-2 p-3 rounded-2xl rounded-bl-md bg-muted text-foreground">
-            <Loader2 size={14} className="animate-spin text-primary" />
-            <span className="text-sm font-body">Thinking...</span>
-          </div>
-        )}
       </div>
 
       <div className="px-4 py-3 border-t border-border bg-card mb-16">
         <div className="flex items-center gap-2">
           <input
-            ref={inputRef}
-            onKeyDown={(e) => e.key === "Enter" && handleSend()}
-            placeholder="Apna sawal likhein..."
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+            placeholder="Type your message..."
             className="flex-1 px-4 py-2.5 rounded-xl border border-input bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring font-body text-sm"
           />
-          {isLoading ? (
-            <button onClick={stopStreaming} className="w-10 h-10 rounded-xl bg-destructive flex items-center justify-center text-destructive-foreground">
-              <Square size={16} />
-            </button>
-          ) : (
-            <button onClick={handleSend} className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center text-primary-foreground">
-              <Send size={18} />
-            </button>
-          )}
+          <button
+            onClick={sendMessage}
+            className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center text-primary-foreground"
+          >
+            <Send size={18} />
+          </button>
         </div>
       </div>
 
