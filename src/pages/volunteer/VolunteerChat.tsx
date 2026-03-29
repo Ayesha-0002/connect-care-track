@@ -1,6 +1,11 @@
-import { useState } from "react";
-import { Home, MapPin, Package, MessageCircle, User, Send, Bot } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Home, MapPin, Package, MessageCircle, User } from "lucide-react";
+import { useSearchParams } from "react-router-dom";
 import BottomNav from "@/components/BottomNav";
+import ChatConversationList from "@/components/ChatConversationList";
+import ChatThread from "@/components/ChatThread";
+import { useConversations, Conversation } from "@/hooks/useDirectMessages";
+import { supabase } from "@/integrations/supabase/client";
 
 const volunteerNav = [
   { icon: Home, label: "Home", path: "/volunteer" },
@@ -10,69 +15,74 @@ const volunteerNav = [
   { icon: User, label: "Profile", path: "/volunteer/profile" },
 ];
 
-type Message = { id: number; text: string; sender: "user" | "bot" };
-
 const VolunteerChat = () => {
-  const [messages, setMessages] = useState<Message[]>([
-    { id: 1, text: "Assalam-o-Alaikum! I'm your SafeBite AI assistant. I can help you with pickups and deliveries. 🚗", sender: "bot" },
-  ]);
-  const [input, setInput] = useState("");
+  const [searchParams] = useSearchParams();
+  const [userId, setUserId] = useState<string | null>(null);
+  const [activeConv, setActiveConv] = useState<Conversation | null>(null);
 
-  const sendMessage = () => {
-    if (!input.trim()) return;
-    setMessages((prev) => [...prev, { id: Date.now(), text: input, sender: "user" }]);
-    setInput("");
-    setTimeout(() => {
-      setMessages((prev) => [
-        ...prev,
-        { id: Date.now() + 1, text: "I can help you find the best route, contact donors, or resolve pickup issues. What do you need?", sender: "bot" },
-      ]);
-    }, 1000);
-  };
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => setUserId(data.user?.id || null));
+  }, []);
+
+  const { conversations, loading } = useConversations(userId);
+
+  // Handle ?to= and ?donation= query params for starting chat from pickups
+  useEffect(() => {
+    const toId = searchParams.get("to");
+    const donationId = searchParams.get("donation");
+    if (toId && userId) {
+      // Check if conversation exists
+      const existing = conversations.find(c => c.user_id === toId);
+      if (existing) {
+        setActiveConv(existing);
+      } else {
+        // Fetch the other user's profile
+        supabase.from("profiles").select("full_name, avatar_url").eq("id", toId).single()
+          .then(({ data }) => {
+            setActiveConv({
+              user_id: toId,
+              full_name: data?.full_name || "Donor",
+              avatar_url: data?.avatar_url || null,
+              last_message: "",
+              last_time: "",
+              unread: 0,
+              donation_id: donationId,
+              donation_title: null,
+            });
+          });
+      }
+    }
+  }, [searchParams, userId, conversations]);
+
+  if (activeConv && userId) {
+    return (
+      <div className="mobile-container min-h-screen bg-background pb-20 flex flex-col">
+        <ChatThread
+          currentUserId={userId}
+          otherUserId={activeConv.user_id}
+          otherName={activeConv.full_name || "User"}
+          donationId={activeConv.donation_id}
+          donationTitle={activeConv.donation_title}
+          onBack={() => setActiveConv(null)}
+        />
+        <BottomNav items={volunteerNav} />
+      </div>
+    );
+  }
 
   return (
     <div className="mobile-container min-h-screen bg-background pb-20 flex flex-col">
       <div className="px-5 pt-6 pb-3 border-b border-border">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full gradient-primary flex items-center justify-center">
-            <Bot size={20} className="text-primary-foreground" />
-          </div>
-          <div>
-            <h1 className="text-lg font-bold text-foreground">SafeBite AI</h1>
-            <p className="text-xs text-primary font-body">Online</p>
-          </div>
-        </div>
+        <h1 className="text-xl font-bold text-foreground">Messages</h1>
+        <p className="text-xs text-muted-foreground font-body">Chat with donors about food pickups</p>
       </div>
 
-      <div className="flex-1 overflow-y-auto page-padding flex flex-col gap-3">
-        {messages.map((msg) => (
-          <div
-            key={msg.id}
-            className={`max-w-[80%] p-3 rounded-2xl text-sm font-body ${
-              msg.sender === "user"
-                ? "ml-auto gradient-primary text-primary-foreground rounded-br-md"
-                : "mr-auto bg-muted text-foreground rounded-bl-md"
-            }`}
-          >
-            {msg.text}
-          </div>
-        ))}
-      </div>
-
-      <div className="px-4 py-3 border-t border-border bg-card mb-16">
-        <div className="flex items-center gap-2">
-          <input
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-            placeholder="Type your message..."
-            className="flex-1 px-4 py-2.5 rounded-xl border border-input bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring font-body text-sm"
-          />
-          <button onClick={sendMessage} className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center text-primary-foreground">
-            <Send size={18} />
-          </button>
-        </div>
-      </div>
+      <ChatConversationList
+        conversations={conversations}
+        loading={loading}
+        onSelect={setActiveConv}
+        emptyMessage="Jab aap kisi donor ko message karein ge ya koi aap ko message karega, wo yahan dikhai dega."
+      />
 
       <BottomNav items={volunteerNav} />
     </div>
