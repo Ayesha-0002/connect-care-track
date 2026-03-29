@@ -141,12 +141,20 @@ const VolunteerPickups = () => {
                 )}
 
                 {p.status === "posted" && (
-                  <button
-                    onClick={() => navigate(`/volunteer/tracking?donation=${p.id}`)}
-                    className="w-full mt-3 py-2.5 rounded-xl font-semibold text-primary-foreground gradient-primary text-sm"
-                  >
-                    PICKUP
-                  </button>
+                  <div className="flex gap-2 mt-3">
+                    <button
+                      onClick={() => navigate(`/volunteer/tracking?donation=${p.id}`)}
+                      className="flex-1 py-2.5 rounded-xl font-semibold text-primary-foreground gradient-primary text-sm"
+                    >
+                      PICKUP
+                    </button>
+                    <button
+                      onClick={() => navigate(`/volunteer/chat?to=${p.donor_id}&donation=${p.id}`)}
+                      className="py-2.5 px-4 rounded-xl font-semibold text-primary border border-primary text-sm"
+                    >
+                      <MessageCircle size={16} />
+                    </button>
+                  </div>
                 )}
               </div>
             );
