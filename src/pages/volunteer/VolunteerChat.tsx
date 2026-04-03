@@ -48,6 +48,8 @@ const VolunteerChat = () => {
               unread: 0,
               donation_id: donationId,
               donation_title: null,
+              last_message_is_mine: false,
+              last_message_read: false,
             });
           });
       }
