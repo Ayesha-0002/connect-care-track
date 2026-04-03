@@ -76,6 +76,36 @@ export type Database = {
           },
         ]
       }
+      donation_ratings: {
+        Row: {
+          comment: string | null
+          created_at: string | null
+          donation_id: string
+          id: string
+          rated_by_user_id: string
+          rated_user_id: string
+          rating: number
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string | null
+          donation_id: string
+          id?: string
+          rated_by_user_id: string
+          rated_user_id: string
+          rating: number
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string | null
+          donation_id?: string
+          id?: string
+          rated_by_user_id?: string
+          rated_user_id?: string
+          rating?: number
+        }
+        Relationships: []
+      }
       food_donations: {
         Row: {
           ai_freshness: string | null
