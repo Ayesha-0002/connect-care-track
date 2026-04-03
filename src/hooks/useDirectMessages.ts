@@ -10,6 +10,8 @@ export type Conversation = {
   unread: number;
   donation_id: string | null;
   donation_title: string | null;
+  last_message_is_mine: boolean;
+  last_message_read: boolean;
 };
 
 export type DirectMessage = {
@@ -42,7 +44,6 @@ export function useConversations(currentUserId: string | null) {
       return;
     }
 
-    // Group by other user
     const convMap = new Map<string, { msgs: typeof msgs; donationId: string | null }>();
     for (const m of msgs) {
       const otherId = m.sender_id === currentUserId ? m.receiver_id : m.sender_id;
@@ -59,11 +60,10 @@ export function useConversations(currentUserId: string | null) {
       .select("id, full_name, avatar_url")
       .in("id", otherIds);
 
-    // Get donation titles
     const donationIds = Array.from(new Set(
       Array.from(convMap.values()).map(v => v.donationId).filter(Boolean)
     )) as string[];
-    
+
     let donationMap: Record<string, string> = {};
     if (donationIds.length > 0) {
       const { data: donations } = await supabase
@@ -91,6 +91,8 @@ export function useConversations(currentUserId: string | null) {
         unread,
         donation_id: donationId,
         donation_title: donationId ? (donationMap[donationId] || null) : null,
+        last_message_is_mine: latest.sender_id === currentUserId,
+        last_message_read: !!latest.read,
       };
     });
 
@@ -103,7 +105,6 @@ export function useConversations(currentUserId: string | null) {
     fetchConversations();
   }, [fetchConversations]);
 
-  // Realtime
   useEffect(() => {
     if (!currentUserId) return;
     const channel = supabase
@@ -154,7 +155,7 @@ export function useChatMessages(currentUserId: string | null, otherUserId: strin
     if (!currentUserId || !otherUserId) return;
     const channel = supabase
       .channel(`dm-${currentUserId}-${otherUserId}`)
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "direct_messages" }, () => {
+      .on("postgres_changes", { event: "*", schema: "public", table: "direct_messages" }, () => {
         fetchMessages();
       })
       .subscribe();
