@@ -43,6 +43,7 @@ const Auth = () => {
             data: {
               full_name: form.name,
               phone: form.phone,
+              role: form.role,
             },
             emailRedirectTo: window.location.origin,
           },
