@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Eye, EyeOff, Utensils, Loader2 } from "lucide-react";
+import { Eye, EyeOff, Utensils, Loader2, ChevronDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const Auth = () => {
@@ -15,6 +15,7 @@ const Auth = () => {
     email: "",
     phone: "",
     password: "",
+    role: "" as "" | "donor" | "volunteer",
   });
 
   const handleChange = (key: string, value: string) => {
@@ -42,6 +43,7 @@ const Auth = () => {
             data: {
               full_name: form.name,
               phone: form.phone,
+              role: form.role,
             },
             emailRedirectTo: window.location.origin,
           },
@@ -156,6 +158,27 @@ const Auth = () => {
                 placeholder="+92 300 1234567"
                 className="w-full px-4 py-3 rounded-xl border border-input bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring font-body text-sm"
               />
+            </div>
+          )}
+
+          {!isLogin && (
+            <div>
+              <label className="text-sm font-medium text-foreground mb-1.5 block">
+                Select Role
+              </label>
+              <div className="relative">
+                <select
+                  required
+                  value={form.role}
+                  onChange={(e) => handleChange("role", e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl border border-input bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-ring font-body text-sm appearance-none pr-10"
+                >
+                  <option value="" disabled>Choose your role</option>
+                  <option value="donor">🤲 Donor — Donate food to the needy</option>
+                  <option value="volunteer">🚚 Volunteer — Pickup & deliver food</option>
+                </select>
+                <ChevronDown size={18} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+              </div>
             </div>
           )}
 
