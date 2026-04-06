@@ -29,9 +29,9 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<SelectRole />} />
-          <Route path="/login" element={<SelectRole />} />
-          <Route path="/register" element={<SelectRole />} />
+          <Route path="/" element={<Auth />} />
+          <Route path="/login" element={<Auth />} />
+          <Route path="/register" element={<Auth />} />
           <Route path="/select-role" element={<SelectRole />} />
           <Route path="/notifications" element={<Notifications />} />
           
