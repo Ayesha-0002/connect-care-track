@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Eye, EyeOff, Utensils, Loader2 } from "lucide-react";
+import { Eye, EyeOff, Utensils, Loader2, ChevronDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const Auth = () => {
