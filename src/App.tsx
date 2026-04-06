@@ -4,8 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Welcome from "./pages/Welcome";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
+import Auth from "./pages/Auth";
 import SelectRole from "./pages/SelectRole";
 import DonorDashboard from "./pages/donor/DonorDashboard";
 import PostFood from "./pages/donor/PostFood";
@@ -30,9 +29,9 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<SelectRole />} />
-          <Route path="/login" element={<SelectRole />} />
-          <Route path="/register" element={<SelectRole />} />
+          <Route path="/" element={<Auth />} />
+          <Route path="/login" element={<Auth />} />
+          <Route path="/register" element={<Auth />} />
           <Route path="/select-role" element={<SelectRole />} />
           <Route path="/notifications" element={<Notifications />} />
           
