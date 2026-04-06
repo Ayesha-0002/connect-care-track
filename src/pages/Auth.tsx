@@ -15,6 +15,7 @@ const Auth = () => {
     email: "",
     phone: "",
     password: "",
+    role: "" as "" | "donor" | "volunteer",
   });
 
   const handleChange = (key: string, value: string) => {
