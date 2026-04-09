@@ -55,9 +55,13 @@ const Auth = () => {
         });
       }
     } catch (err: any) {
+      const description = err?.message === "Database error saving new user"
+        ? "External Supabase auth setup incomplete hai. /mnt/documents/external-supabase-auth-setup.sql ko apne SQL Editor mein run karke phir signup try karein."
+        : err?.message || "Something went wrong.";
+
       toast({
         title: "Error",
-        description: err.message || "Something went wrong.",
+        description,
         variant: "destructive",
       });
     } finally {
