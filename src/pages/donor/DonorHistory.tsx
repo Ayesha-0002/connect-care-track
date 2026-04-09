@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Home, PlusCircle, Clock, MessageCircle, User, Package, Loader2 } from "lucide-react";
 import BottomNav from "@/components/BottomNav";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabaseClient";
 
 const donorNav = [
   { icon: Home, label: "Home", path: "/donor" },

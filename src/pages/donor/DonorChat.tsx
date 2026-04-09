@@ -4,7 +4,7 @@ import BottomNav from "@/components/BottomNav";
 import ChatConversationList from "@/components/ChatConversationList";
 import ChatThread from "@/components/ChatThread";
 import { useConversations, Conversation } from "@/hooks/useDirectMessages";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabaseClient";
 
 const donorNav = [
   { icon: Home, label: "Home", path: "/donor" },

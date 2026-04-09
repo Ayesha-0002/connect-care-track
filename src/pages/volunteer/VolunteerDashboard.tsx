@@ -3,7 +3,7 @@ import { Home, MapPin, Package, MessageCircle, User, Navigation, Bell, Loader2 }
 import BottomNav from "@/components/BottomNav";
 import logo from "@/assets/rizq-logo.png";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabaseClient";
 
 const volunteerNav = [
   { icon: Home, label: "Home", path: "/volunteer" },

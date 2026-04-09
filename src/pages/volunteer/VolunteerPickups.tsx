@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Home, MapPin, Package, MessageCircle, User, Loader2, CheckCircle, Camera } from "lucide-react";
 import BottomNav from "@/components/BottomNav";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabaseClient";
 import { useNavigate } from "react-router-dom";
 
 const volunteerNav = [
