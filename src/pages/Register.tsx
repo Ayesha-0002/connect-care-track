@@ -1,15 +1,48 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Loader2, ChevronDown } from "lucide-react";
+import { supabase } from "@/lib/supabaseClient";
+import { useToast } from "@/hooks/use-toast";
 import heroImg from "@/assets/hero-food-donation.jpg";
 
 const Register = () => {
   const navigate = useNavigate();
-  const [form, setForm] = useState({ name: "", phone: "", email: "", password: "" });
+  const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
+  const [form, setForm] = useState({ name: "", phone: "", email: "", password: "", role: "" as "" | "donor" | "volunteer" });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    navigate("/select-role");
+    if (!form.role) {
+      toast({ title: "Role Required", description: "Please select a role.", variant: "destructive" });
+      return;
+    }
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.signUp({
+        email: form.email,
+        password: form.password,
+        options: {
+          data: {
+            full_name: form.name,
+            phone: form.phone,
+            role: form.role,
+          },
+          emailRedirectTo: window.location.origin,
+        },
+      });
+      if (error) throw error;
+      toast({ title: "Account created! ✅", description: "You can now log in." });
+      navigate("/select-role");
+    } catch (err: any) {
+      toast({
+        title: "Signup Failed",
+        description: err?.message || "Something went wrong.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -34,7 +67,7 @@ const Register = () => {
             { label: "Name", key: "name", type: "text", placeholder: "Your full name" },
             { label: "Phone No.", key: "phone", type: "tel", placeholder: "+92 300 1234567" },
             { label: "Email ID", key: "email", type: "email", placeholder: "you@example.com" },
-            { label: "Password", key: "password", type: "password", placeholder: "Create a password" },
+            { label: "Password", key: "password", type: "password", placeholder: "Create a password (min 6 chars)" },
           ].map(({ label, key, type, placeholder }) => (
             <div key={key}>
               <label className="text-sm font-medium text-foreground mb-1.5 block">{label}</label>
@@ -43,16 +76,37 @@ const Register = () => {
                 value={form[key as keyof typeof form]}
                 onChange={(e) => setForm({ ...form, [key]: e.target.value })}
                 placeholder={placeholder}
+                required
+                minLength={key === "password" ? 6 : undefined}
                 className="w-full px-4 py-3 rounded-xl border border-input bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring font-body text-sm"
               />
             </div>
           ))}
 
+          <div>
+            <label className="text-sm font-medium text-foreground mb-1.5 block">Select Role</label>
+            <div className="relative">
+              <select
+                required
+                value={form.role}
+                onChange={(e) => setForm({ ...form, role: e.target.value as "donor" | "volunteer" })}
+                className="w-full px-4 py-3 rounded-xl border border-input bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-ring font-body text-sm appearance-none pr-10"
+              >
+                <option value="" disabled>Choose your role</option>
+                <option value="donor">🤲 Donor — Donate food</option>
+                <option value="volunteer">🚚 Volunteer — Pickup & deliver</option>
+              </select>
+              <ChevronDown size={18} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+            </div>
+          </div>
+
           <button
             type="submit"
-            className="w-full py-3.5 rounded-xl font-semibold text-primary-foreground gradient-primary transition-all hover:opacity-90 active:scale-[0.98] mt-2"
+            disabled={loading}
+            className="w-full py-3.5 rounded-xl font-semibold text-primary-foreground gradient-primary transition-all hover:opacity-90 active:scale-[0.98] mt-2 flex items-center justify-center gap-2 disabled:opacity-60"
           >
-            Submit
+            {loading && <Loader2 size={18} className="animate-spin" />}
+            Sign Up
           </button>
 
           <p className="text-center text-sm text-muted-foreground font-body">

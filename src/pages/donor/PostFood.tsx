@@ -49,14 +49,9 @@ const PostFood = () => {
         safe: data.safe ?? false,
       });
     } catch {
-      // Fallback to simulated analysis
-      const score = Math.floor(Math.random() * 30) + 70;
-      setAiResult({
-        quality: score >= 85 ? "Excellent" : score >= 75 ? "Good" : "Acceptable",
-        freshness: score >= 85 ? "Very Fresh — prepared within 2 hours" : "Fresh — prepared within 4 hours",
-        score,
-        safe: score >= 60,
-      });
+      // AI check failed — do not allow fallback; block submission
+      toast.error("AI food quality check failed. Please try again.");
+      setAiResult(null);
     }
     setIsAnalyzing(false);
   };
