@@ -28,27 +28,52 @@ const Auth = () => {
 
     try {
       if (isLogin) {
-        const { error } = await supabase.auth.signInWithPassword({
-          email: form.email,
-          password: form.password,
-        });
-        if (error) throw error;
+        try {
+          const { error } = await supabase.auth.signInWithPassword({
+            email: form.email,
+            password: form.password,
+          });
+
+          if (error) {
+            console.error("Supabase login error:", error);
+            console.log("Supabase login error full object:", error);
+            throw error;
+          }
+        } catch (loginError) {
+          console.error("Supabase login request failed:", loginError);
+          console.log("Supabase login request failed full object:", loginError);
+          throw loginError;
+        }
+
         toast({ title: "Welcome back! 🎉", description: "Login successful." });
         navigate("/select-role");
       } else {
-        const { error } = await supabase.auth.signUp({
-          email: form.email,
-          password: form.password,
-          options: {
-            data: {
-              full_name: form.name,
-              phone: form.phone,
-              role: form.role,
+        try {
+          const { error } = await supabase.auth.signUp({
+            email: form.email,
+            password: form.password,
+            options: {
+              data: {
+                full_name: form.name,
+                phone: form.phone,
+                role: form.role,
+              },
+              emailRedirectTo: window.location.origin,
             },
-            emailRedirectTo: window.location.origin,
-          },
-        });
-        if (error) throw error;
+          });
+
+          if (error) {
+            console.error("Supabase signup error:", error);
+            console.log("Supabase signup error full object:", error);
+            throw error;
+          }
+        } catch (signupError) {
+          console.error("Supabase signup request failed:", signupError);
+          console.log("Supabase signup request failed full object:", signupError);
+          console.log("Supabase URL being used:", "https://vgblzguqbdiyufpdbaf.supabase.co");
+          throw signupError;
+        }
+
         toast({
           title: "Account created! ✅",
           description: "Please check your email to verify your account.",
