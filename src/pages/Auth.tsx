@@ -65,12 +65,15 @@ const Auth = () => {
           if (error) {
             console.error("Supabase signup error:", error);
             console.log("Supabase signup error full object:", error);
+            alert(`Signup Failed: ${error.message} (Status: ${error.status ?? "unknown"})`);
             throw error;
           }
         } catch (signupError) {
           console.error("Supabase signup request failed:", signupError);
           console.log("Supabase signup request failed full object:", signupError);
           console.log("Supabase URL being used:", "https://vgblzguqbdiyufpdbaf.supabase.co");
+          const typedError = signupError as { message?: string; status?: number | string };
+          alert(`Signup Failed: ${typedError?.message || "Failed to fetch"} (Status: ${typedError?.status ?? "unknown"})`);
           throw signupError;
         }
 
